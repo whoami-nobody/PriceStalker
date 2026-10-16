@@ -33,6 +33,8 @@ export class NtfyProvider implements NotificationProvider {
       if (this.username && this.password) {
         const auth = Buffer.from(`${this.username}:${this.password}`).toString('base64');
         headers['Authorization'] = `Basic ${auth}`;
+      } else if (this.password) {
+        headers['Authorization'] = `Bearer ${this.password}`;
       }
 
       await axios.post(url, message, { headers });
