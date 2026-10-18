@@ -268,3 +268,48 @@ describe('Telegram and product names containing markup characters', () => {
     expect((post.mock.calls[0][1] as any).parse_mode).toBe('HTML');
   });
 });
+
+describe('NtfyProvider', () => {
+  const payload: NotificationPayload = { ...base };
+
+  it('sends notification to default ntfy.sh URL with basic headers', async () => {
+    await new NtfyProvider('my-topic').send(payload);
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(String),
+      {
+        headers: expect.not.objectContaining({
+          Authorization: expect.anything()
+        }),
+      }
+    );
+  });
+
+  it('includes Basic Auth headers when both username and password are provided', async () => {
+    await new NtfyProvider('my-topic', null, 'user123', 'pass456').send(payload);
+
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(String),
+      {
+        headers: expect.objectContaining({
+          Authorization: `Basic ${Buffer.from('user123:pass456').toString('base64')}`,
+        }),
+      }
+    );
+  });
+
+  it('includes Bearer token headers when only a password is provided', async () => {
+    await new NtfyProvider('my-topic', null, null, 'secret-token-123').send(payload);
+
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(String),
+      {
+        headers: expect.objectContaining({
+          Authorization: `Bearer secret-token-123`,
+        }),
+      }
+    );
+  });
+});
